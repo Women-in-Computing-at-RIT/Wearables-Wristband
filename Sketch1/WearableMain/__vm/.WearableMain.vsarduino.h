@@ -87,7 +87,7 @@ extern "C" void __cxa_pure_virtual() {;}
 #define portInputRegister(P)
 #define portModeRegister(P)
 #include <..\WearableMain\WearableMain.ino>
-#include <..\..\..\..\Arduino\PulseSensor_Amped_Arduino-master\PulseSensor_Amped_Arduino-master\PulseSensorAmped_Arduino_1dot4\AllSerialHandling.ino>
+#include <..\WearableMain\AllSerialHandling.ino>
 #include <..\WearableMain\Interrupt.ino>
-#include <..\..\..\..\Arduino\PulseSensor_Amped_Arduino-master\PulseSensor_Amped_Arduino-master\PulseSensorAmped_Arduino_1dot4\Timer_Interrupt_Notes.ino>
+#include <..\WearableMain\TimerInterruptNotes.ino>
 #endif

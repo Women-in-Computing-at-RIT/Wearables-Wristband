@@ -69,9 +69,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\Arduino\PulseSensor_Amped_Arduino-master\PulseSensor_Amped_Arduino-master\PulseSensorAmped_Arduino_1dot4\AllSerialHandling.ino" />
-    <None Include="..\..\..\..\Arduino\PulseSensor_Amped_Arduino-master\PulseSensor_Amped_Arduino-master\PulseSensorAmped_Arduino_1dot4\Timer_Interrupt_Notes.ino" />
+    <None Include="AllSerialHandling.ino" />
     <None Include="Interrupt.ino" />
+    <None Include="TimerInterruptNotes.ino" />
     <None Include="WearableMain.ino">
       <FileType>CppCode</FileType>
     </None>

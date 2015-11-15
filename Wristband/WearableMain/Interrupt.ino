@@ -19,9 +19,7 @@ void interruptSetup() {
 }
 
 
-// THIS IS THE TIMER 2 INTERRUPT SERVICE ROUTINE. 
-// Timer 2 makes sure that we take a reading every 2 miliseconds
-ISR(TIMER1_COMPA_vect) {                         // triggered when Timer2 counts to 124
+ISR(TIMER1_COMPA_vect) {                     
 	cli();                                      // disable interrupts while we do this
 	Signal = analogRead(pulsePin);              // read the Pulse Sensor 
 	sampleCounter += 2;                         // keep track of the time in mS with this variable

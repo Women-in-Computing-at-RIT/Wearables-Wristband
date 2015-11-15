@@ -16,7 +16,6 @@ https ://github.com/WorldFamousElectronics/PulseSensor_Amped_Arduino/blob/master
 ----------------------       ----------------------  ----------------------
 */
 
-#include "test.h"
 #include <Adafruit_NeoPixel.h>
 
 #define PixelColor uint32_t

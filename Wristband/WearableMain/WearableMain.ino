@@ -18,8 +18,6 @@ https ://github.com/WorldFamousElectronics/PulseSensor_Amped_Arduino/blob/master
 
 #include <Adafruit_NeoPixel.h>
 
-#define PixelColor uint32_t
-
 using NeoPixel = Adafruit_NeoPixel;
 
 //  Variables
@@ -36,6 +34,8 @@ volatile boolean Pulse = false;     // "True" when User's live heartbeat is dete
 volatile boolean QS = false;        // becomes true when Arduoino finds a beat.
 
 typedef const struct Color {
+	using PixelColor = uint32_t;
+	
 	byte red;
 	byte green;
 	byte blue;

@@ -15,10 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="WearableMain.ino" />
-    <None Include="Interrupt.ino" />
-    <None Include="AllSerialHandling.ino" />
-    <None Include="TimerInterruptNotes.ino" />
+    <None Include="AllSerialHandling.ino">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Interrupt.ino">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="TimerInterruptNotes.ino">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="WearableMain.ino">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.WearableMain.vsarduino.h">

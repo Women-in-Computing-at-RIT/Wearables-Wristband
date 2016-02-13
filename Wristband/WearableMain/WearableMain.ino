@@ -33,22 +33,20 @@ volatile int IBI = 600;             // int that holds the time interval between 
 volatile boolean Pulse = false;     // "True" when User's live heartbeat is detected. "False" when not a "live beat". 
 volatile boolean QS = false;        // becomes true when Arduoino finds a beat.
 
-typedef const struct Color {
-	using PixelColor = uint32_t;
-	
-	byte red;
-	byte green;
-	byte blue;
-	PixelColor pixel;
-
-	Color(byte red, byte green, byte blue) : red(red), green(green), blue(blue) {
-		pixel = NeoPixel::Color(red, green, blue);
-	}
+typedef const union {
+	unsigned int pixel;
+  struct {
+    unsigned char red;
+    unsigned char green;
+    unsigned char blue;
+    unsigned char pad;
+  } components;
+  
 } Color;
 
 NeoPixel pixel = NeoPixel(1, blinkPin, NEO_GRB + NEO_KHZ800);
-Color OFF_COLOR = { 255, 0, 0 };
-Color ON_COLOR = { 0, 255, 0 };
+Color OFF_COLOR = {NeoPixel::Color(255, 0, 0)};
+Color ON_COLOR = {NeoPixel::Color(0, 0, 255)};
 
 // Regards Serial OutPut  -- Set This Up to your needs
 static boolean serialVisual = false;   // Set to 'false' by Default.  Re-set to 'true' to see Arduino Serial Monitor ASCII Visual Pulse 

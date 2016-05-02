@@ -7,8 +7,7 @@
 void serialOutput() {   // Decide How To Output Serial. 
 	if (serialVisual == true) {
 		arduinoSerialMonitorVisual('-', Signal);   // goes to function that makes Serial Monitor Visualizer
-	}
-	else {
+	} else {
 		sendDataToSerial('S', Signal);     // goes to sendDataToSerial function
 	}
 }
@@ -21,8 +20,7 @@ void serialOutputWhenBeatHappens() {
 		Serial.print("BPM: ");
 		Serial.print(BPM);
 		Serial.print("  ");
-	}
-	else {
+	} else {
 		sendDataToSerial('B', BPM);   // send heart rate with a 'B' prefix
 		sendDataToSerial('Q', IBI);   // send time between beats with a 'Q' prefix
 	}

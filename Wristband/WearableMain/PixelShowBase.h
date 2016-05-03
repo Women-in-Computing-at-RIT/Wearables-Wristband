@@ -19,11 +19,28 @@
 
 typedef unsigned long int TimeMillis;
 
-struct ColorArray {
+/// <summary>
+/// A wrapper around an array of colors, keeps track of size and can be extended for further
+/// enhancement.
+///</summary>
+class ColorArray {
+public:
+	ColorArray(const Color arr[], uint8_t size);
+	ColorArray(const ColorArray& orig);
+	~ColorArray();
+	Color& get(uint8_t i) const;
+	void set(uint8_t i, Color& color);
+	uint8_t size(void) const;
+	void apply(NeoPixel& strap);
+private:
 	Color *arr;
-	size_t size;
+	uint8_t length;
 };
 
+/// <summary>
+/// Simple utility class for managing the state of things that are attached to the Flora Board itself like the 
+/// onboard NeoPixel and the onboard LED.
+/// </summary>
 class FloraBoard
 {
 public:
@@ -38,33 +55,32 @@ private:
 	NeoPixel onboardPixel;
 };
 
+/// <summary>
+///
+/// </summary>
 class ColorFunction {
 public:
-	ColorArray apply(ColorArray& input);
-};
-
-class ColorPattern 
-{
-public:
-    ColorPattern(uint16_t pixelCount, uint8_t pin, TimeMillis period);
-    ColorPattern(NeoPixel *pixels, TimeMillis period);
-    ~ColorPattern();
-	void tick(void);
-	size_t getTicks(void);
-	NeoPixel *getPixels(void);
-	friend void pixelColorWipe(ColorPattern&, Color&);
+	ColorFunction();
+	ColorArray apply(const ColorArray& input);
+	ColorFunction operator+(ColorFunction& f);
+	ColorFunction operator()(ColorFunction& g);
+	ColorArray operator()(ColorArray& input);
+	virtual ColorArray& _apply(ColorArray& input);
+	virtual ColorArray& mutate(ColorArray& input) const;
 protected:
-	TimeMillis period;
-    virtual void act() = 0;
-private:
-	boolean alloc;
-    NeoPixel *strip;
-	TimeMillis start;
-	size_t ticks;
+	ColorFunction(ColorFunction *inner);
+	ColorFunction *inner;
 };
 
-void pixelColorWipe(NeoPixel& strip, const Color& color);
-void pixelColorWipe(ColorPattern& pattern, const Color& color);
+class CombinedColorFunction : public ColorFunction {
+public:
+	CombinedColorFunction(ColorFunction& f, ColorFunction& g);
+	ColorArray& _apply(ColorArray& input) override;
+	ColorArray& mutate(ColorArray& input) const override;
+	ColorFunction& f;
+	ColorFunction& g;
+};
+
+void pixelColorWipe(NeoPixel& strip, Color& color);
 
 #endif
-

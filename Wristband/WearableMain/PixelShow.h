@@ -10,23 +10,43 @@
 #endif
 
 #include "PixelShowBase.h"
+#define RAINBOW_ARR_SIZE 4
 
-class RainbowPattern : public ColorPattern {
+class RainbowFunction : public ColorFunction
+{
 public:
-	RainbowPattern(uint16_t nPixels, uint8_t pin, TimeMillis period, ColorArray& colors);
-	RainbowPattern(NeoPixel *pixels, TimeMillis period, ColorArray& colors);
-	RainbowPattern(NeoPixel *pixels, TimeMillis period);
-	void setPeriod(TimeMillis period);
-	void setColors(const ColorArray& colors);
-	void getColors(ColorArray& out);
-	void apply(NeoPixel& strip, ColorArray& cols);
-	static ColorArray RAINBOW;
-protected:
-	void act() override;
+	static const Color RAINBOW_ARR[RAINBOW_ARR_SIZE];
+	static const ColorArray RAINBOW;
+	RainbowFunction(const ColorArray& colors);
+	RainbowFunction();
+	ColorArray& mutate(ColorArray& input) const override;
 private:
-	static Color RAINBOW_COLORS[];
-	ColorArray& colors;
+	const ColorArray& colors;
 };
 
+class ChaseFunction : public ColorFunction
+{
+public:
+	ColorArray& mutate(ColorArray& input) const override;
+};
+
+class DeferFunction : public ColorFunction
+{
+public:
+	DeferFunction(uint16_t deferrals);
+	ColorArray& _apply(ColorArray& input) override;
+private:
+	uint16_t defers;
+};
+
+class PeriodicFunction : public ColorFunction
+{
+public:
+	PeriodicFunction(TimeMillis period);
+	ColorArray& _apply(ColorArray& input) override;
+private:
+	TimeMillis start;
+	TimeMillis period;
+};
 #endif
 

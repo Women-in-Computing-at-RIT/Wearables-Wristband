@@ -6,69 +6,69 @@
 
 #define RAINBOW_COLOR_COUNT 4
 
-Color RainbowPattern::RAINBOW_COLORS[RAINBOW_COLOR_COUNT] = {
-	Color(30, 0, 0, 0),
-	Color(0, 30, 0, 0),
-	Color(0, 0, 30, 0),
-	Color(0, 0, 0, 30)
+const Color RainbowFunction::RAINBOW_ARR[RAINBOW_ARR_SIZE] = {
+	Color(48, 0, 0, 0),
+	Color(0, 48, 0, 0),
+	Color(0, 0, 48, 0),
+	Color(0, 0, 0, 48)
 };
 
-ColorArray RainbowPattern::RAINBOW = {
-	RainbowPattern::RAINBOW_COLORS,
-	RAINBOW_COLOR_COUNT
-};
+const ColorArray RainbowFunction::RAINBOW = ColorArray(RainbowFunction::RAINBOW_ARR, RAINBOW_ARR_SIZE);
 
-RainbowPattern::RainbowPattern(uint16_t nPixels, uint8_t pin, TimeMillis period, ColorArray& colors) :
-	ColorPattern(nPixels, pin, period), colors(colors)
+RainbowFunction::RainbowFunction(const ColorArray& colors) :
+	ColorFunction(), colors(colors) {}
+
+RainbowFunction::RainbowFunction() : RainbowFunction(RainbowFunction::RAINBOW) {}
+
+ColorArray& RainbowFunction::mutate(ColorArray& pixels) const
 {
+	uint8_t nPixels = pixels.size();
+	uint8_t nColors = colors.size();
+
+	for (uint8_t i = 0; i < nPixels; i++)
+		pixels.set(i, this->colors.get(i % nColors));
 }
 
-RainbowPattern::RainbowPattern(NeoPixel *pixels, TimeMillis period, ColorArray& colors) :
-	ColorPattern(pixels, period), colors(colors)
+ColorArray& ChaseFunction::mutate(ColorArray& pixels) const
 {
+	uint8_t nPixels = pixels.size();
+	
+	Color last = pixels.get(nPixels - 1);
+	for (uint8_t i = 0; i < nPixels - 1; i++)
+		pixels.set(i + 1, pixels.get(i));
+
+	pixels.set(0, last);
+	return pixels;
 }
 
-RainbowPattern::RainbowPattern(NeoPixel *pixels, TimeMillis period) :
-	RainbowPattern(pixels, period, RAINBOW) {}
-
-void RainbowPattern::setColors(const ColorArray& colors)
+DeferFunction::DeferFunction(uint16_t deferrals) : defers(deferrals) {}
+ColorArray& DeferFunction::_apply(ColorArray& input)
 {
-	this->colors = colors;
-}
-
-void RainbowPattern::getColors(ColorArray& out)
-{
-	uint16_t nPixels = getPixels()->numPixels();
-	for (size_t i = 0; i < out.size && i < nPixels; i++)
-		out.arr[i] = colors.arr[i];
-}
-
-void RainbowPattern::apply(NeoPixel& strip, ColorArray& colors)
-{
-	static uint8_t ticks = 0;
-	uint16_t nPixels = strip.numPixels();
-
-	for (uint16_t i = 0; i < nPixels; i++)
+	if (defers <= 0)
+		return ColorFunction::_apply(input);
+	else
 	{
-		Color& colData = colors.arr[i % colors.size];
-		strip.setPixelColor((i + (ticks % colors.size)) % nPixels, colData.components.red, colData.components.green, colData.components.blue, colData.components.white);
+		defers--;
+		return input;
 	}
-
-	strip.show();
-	ticks += 1;
 }
 
-void RainbowPattern::act()
+PeriodicFunction::PeriodicFunction(TimeMillis period)
 {
-	static uint8_t ticks = 0;
-	NeoPixel strip = *getPixels();
-	uint16_t nPixels = strip.numPixels();
-	for (uint16_t i = 0; i < nPixels; i++)
-	{
-		Color& colData = colors.arr[i % colors.size];
-		strip.setPixelColor((i + (ticks % colors.size)) % nPixels, colData.components.red, colData.components.green, colData.components.blue, colData.components.white);
-	}
+	this->start = millis();
+	this->period = period;
+}
 
-	strip.show();
-	ticks += 1;
+ColorArray& PeriodicFunction::_apply(ColorArray& input)
+{
+	TimeMillis stop = millis();
+	TimeMillis diff = stop - start;
+
+	if (diff >= period)
+	{
+		start = stop;
+		return ColorFunction::_apply(input);
+	}
+	else
+		return input;
 }

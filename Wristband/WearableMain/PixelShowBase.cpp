@@ -1,52 +1,50 @@
 #include "PixelShowBase.h"
 
-ColorPattern::ColorPattern(uint16_t numPixels, uint8_t pin, TimeMillis period)
+ColorArray::ColorArray(const Color colors[], uint8_t size) : length(size)
 {
-	this->alloc = true;
-	this->strip = new NeoPixel(numPixels, pin, NEO_GRB + NEO_KHZ800);
-	this->start = millis();
-	this->period = period;
-	this->ticks = 0;
+	size_t nbytes = size*sizeof(Color);
+
+	this->arr = (Color *)malloc(nbytes);
+	memcpy(this->arr, colors, nbytes);
 }
 
-ColorPattern::ColorPattern(NeoPixel *pixels, TimeMillis period)
+ColorArray::ColorArray(const ColorArray& orig)
 {
-	this->alloc = false;
-	this->strip = pixels;
-	this->start = millis();
-	this->period = period;
-	this->ticks = 0;
+	size_t nbytes = orig.length * sizeof(Color);
+
+	this->length = orig.length;
+	this->arr = (Color *)malloc(nbytes);
+	
+	memcpy(this->arr, orig.arr, nbytes);
 }
 
-ColorPattern::~ColorPattern()
+ColorArray::~ColorArray()
 {
-	if (this->alloc)
-		delete this->strip;
+	free(this->arr);
 }
 
-void ColorPattern::tick(void)
+Color& ColorArray::get(uint8_t i) const
 {
-	TimeMillis stop = millis();
-	TimeMillis diff = stop - start;
-	static char buff[500];
-	sprintf(buff, "Start: %ld Stop: %ld Diff: %ld Period: %ld Ticks: %ld", start, stop, diff, period, this->ticks);
-	Serial.println(buff);
-	if (diff >= period)
-	{
-		start = stop;
-		this->act();
-		this->ticks += 1;
-	}
+	return this->arr[i];
 }
 
-size_t ColorPattern::getTicks(void)
+void ColorArray::set(uint8_t i, Color& color)
 {
-	return ticks;
+	this->arr[i] = color;
 }
 
-NeoPixel *ColorPattern::getPixels(void)
+uint8_t ColorArray::size(void) const
 {
-	return this->strip;
+	return this->length;
+}
+
+void ColorArray::apply(NeoPixel& strip)
+{
+	uint16_t nPixels = strip.numPixels();
+	uint8_t nColors = this->length;
+
+	for (uint8_t i = 0; i < nColors && i < nPixels; i++)
+		strip.setPixelColor(i, this->get(i).pixel);
 }
 
 FloraBoard::FloraBoard() : onboardPixel{ 1, ONBOARD_PIXEL_PIN, NEO_GRB + NEO_KHZ800 }, ledOn(false), pixColor(0)
@@ -78,13 +76,62 @@ boolean FloraBoard::getOnboardLed(void)
 	return this->ledOn;
 }
 
+
+ColorFunction::ColorFunction() : inner(nullptr)
+{}
+
+ColorFunction::ColorFunction(ColorFunction *inner) : inner(inner)
+{}
+
+ColorArray ColorFunction::apply(const ColorArray& input)
+{
+	ColorArray cpy = ColorArray(input);
+	this->_apply(cpy);
+
+	return cpy;
+}
+
+ColorArray& ColorFunction::_apply(ColorArray& input)
+{
+	if (this->inner != nullptr)
+		this->inner->_apply(input);
+
+	this->mutate(input);
+	return input;
+}
+
+ColorArray& ColorFunction::mutate(ColorArray& input) const
+{
+	return input;
+}
+
+ColorFunction ColorFunction::operator+(ColorFunction& g)
+{
+	return CombinedColorFunction(*this, g);
+}
+
+ColorFunction ColorFunction::operator()(ColorFunction& g)
+{
+	return CombinedColorFunction(*this, g);
+}
+
+ColorArray ColorFunction::operator()(ColorArray& input)
+{
+	return this->apply(input);
+}
+
+CombinedColorFunction::CombinedColorFunction(ColorFunction& f, ColorFunction& g) : f(f), g(g)
+{}
+
+ColorArray& CombinedColorFunction::_apply(ColorArray& input)
+{
+	ColorArray& res = this->g._apply(input);
+	res = this->f._apply(res);
+	return res;
+}
+
 void pixelColorWipe(NeoPixel& strip, const Color& color)
 {
 	for (uint16_t i = 0; i < strip.numPixels(); i++)
 		strip.setPixelColor(i, color.pixel);
-}
-
-void pixelColorWipe(ColorPattern& pattern, const Color& color)
-{
-	pixelColorWipe(*pattern.getPixels(), color);
 }

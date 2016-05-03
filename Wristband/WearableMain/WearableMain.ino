@@ -16,7 +16,6 @@
   ----------------------       ----------------------  ----------------------
 */
 
-#include <TimerThree.h>
 #include <SPI.h>
 #if not defined(_VARIANT_ARUDINO_DUE_X_) && not defined(_VARIANT_ARDUINO_ZERO_)
 	#include <SoftwareSerial.h>
@@ -32,11 +31,11 @@
 #include "NeoPixelStrip.h"
 #include "PixelShow.h"
 
+#define NUM_PIXEL_STRAP 3
+
 //  Variables
 const int pulsePin = A10;
 const int blinkPin = A7;
-const int fadePin = 12;
-int fadeRate = 0;
 
 // Volatile Variables, used in the interrupt service routine!
 volatile int BPM;                   // int that holds raw Analog in 0. updated every 2mS
@@ -45,8 +44,8 @@ volatile int IBI = 600;             // int that holds the time interval between 
 volatile boolean Pulse = false;     // "True" when User's live heartbeat is detected. "False" when not a "live beat".
 volatile boolean QS = false;        // becomes true when Arduoino finds a beat.
 
-NeoPixel strip = NeoPixel(3, blinkPin, NEO_GRB + NEO_KHZ800);
-BluefruitComms comms = BluefruitComms();
+NeoPixel strip = NeoPixel(NUM_PIXEL_STRAP, blinkPin, NEO_GRB + NEO_KHZ800);
+BluefruitComms comms;
 FloraBoard board;
 const Color OFF_COLOR(24, 0, 0);
 const Color ON_COLOR(0, 128, 0);
@@ -62,8 +61,14 @@ ColorArray effectArr = { effect, 3 };
 // Regards Serial OutPut  -- Set This Up to your needs
 static boolean serialVisual = false;   // Set to 'false' by Default.  Re-set to 'true' to see Arduino Serial Monitor ASCII Visual Pulse
 
-RainbowPattern pattern = RainbowPattern(&strip, 100, effectArr);
+RainbowFunction rainbowFn = RainbowFunction();
+ChaseFunction chaseFn = ChaseFunction();
+PeriodicFunction periodFn = PeriodicFunction(500);
+ColorFunction periodicChaseFn = periodFn(chaseFn);
  
+ColorArray effectArray = ColorArray(effect, NUM_PIXEL_STRAP);
+ColorArray strapArray = rainbowFn(effectArray);
+
 void setup() {
   Serial.begin(115200);             // we agree to talk fast!
   interruptSetup();                 // sets up to read Pulse Sensor signal every 2mS
@@ -71,9 +76,8 @@ void setup() {
   strip.begin();
   strip.setBrightness(48);
   strip.show();
-
-  delay(2000);
-
+  
+  delay(50);
   comms.initialize();
 
 }
@@ -93,21 +97,15 @@ void loop() {
     //pixelColorWipe(strip, OFF_COLOR);
   }
 
-  pattern.apply(strip, effectArr);
+  periodicChaseFn._apply(strapArray);
 
   if (Pulse)
 	  board.setOnboardPixel(ON_COLOR);
   else
 	  board.setOnboardPixel(OFF_COLOR);
 
-  static char buf[500];
-  for (uint16_t i = 0; i < strip.numPixels(); i++)
-  {
-	  sprintf(buf, "Attempting to show pixel %d which will be of color %ld.", i, strip.getPixelColor(i));
-	  Serial.println(buf);
-  }
+  strapArray.apply(strip);
+  strip.show();
 
-  static boolean init = false;
-  //pixelColorWipe(strip, ON_COLOR);
   delay(500);
 }

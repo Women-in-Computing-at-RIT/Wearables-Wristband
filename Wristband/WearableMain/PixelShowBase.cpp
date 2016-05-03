@@ -1,14 +1,22 @@
 #include "PixelShowBase.h"
 
-ColorPattern::ColorPattern(uint16_t numPixels, uint8_t pin, ColorPattern *decorator) :
-	alloc(true), wrapper(decorator), timestamp(millis())
+ColorPattern::ColorPattern(uint16_t numPixels, uint8_t pin, TimeMillis period)
 {
+	this->alloc = true;
 	this->strip = new NeoPixel(numPixels, pin, NEO_GRB + NEO_KHZ800);
+	this->start = millis();
+	this->period = period;
+	this->ticks = 0;
 }
 
-ColorPattern::ColorPattern(NeoPixel *pixels, ColorPattern *decorator) : 
-	alloc(false), strip(pixels), wrapper(decorator), timestamp(millis()) 
-{}
+ColorPattern::ColorPattern(NeoPixel *pixels, TimeMillis period)
+{
+	this->alloc = false;
+	this->strip = pixels;
+	this->start = millis();
+	this->period = period;
+	this->ticks = 0;
+}
 
 ColorPattern::~ColorPattern()
 {
@@ -16,28 +24,24 @@ ColorPattern::~ColorPattern()
 		delete this->strip;
 }
 
-void ColorPattern::tick(TimeMillis forcedDelta)
+void ColorPattern::tick(void)
 {
-	// If we are given a delta time then we are wrapping a primary pattern, use theirs to synchronize
-	TimeMillis dt;
-	if (forcedDelta != 0)
-		dt = forcedDelta;
-	else
-		dt = millis() - timestamp;
-
-	if (this->wrapper != nullptr)
-		this->wrapper->tick(dt); // Force wrappers to use same delta time
-
-	this->act(dt);
-
-	// If we were forced lets not waste our time retrieving our own timestamp
-	if(forcedDelta != 0)
-		timestamp = millis();
+	TimeMillis stop = millis();
+	TimeMillis diff = stop - start;
+	static char buff[500];
+	sprintf(buff, "Start: %ld Stop: %ld Diff: %ld Period: %ld Ticks: %ld", start, stop, diff, period, this->ticks);
+	Serial.println(buff);
+	if (diff >= period)
+	{
+		start = stop;
+		this->act();
+		this->ticks += 1;
+	}
 }
 
-void ColorPattern::tick()
+size_t ColorPattern::getTicks(void)
 {
-	tick(0);
+	return ticks;
 }
 
 NeoPixel *ColorPattern::getPixels(void)
@@ -45,41 +49,42 @@ NeoPixel *ColorPattern::getPixels(void)
 	return this->strip;
 }
 
-void pixelColorWipe(NeoPixel& strip, Color& color)
+FloraBoard::FloraBoard() : onboardPixel{ 1, ONBOARD_PIXEL_PIN, NEO_GRB + NEO_KHZ800 }, ledOn(false), pixColor(0)
+{
+	this->onboardPixel.begin();
+	this->onboardPixel.show();
+
+	pinMode(ONBOARD_LED_PIN, OUTPUT);
+}
+
+void FloraBoard::setOnboardPixel(const Color& color)
+{
+	this->onboardPixel.setPixelColor(0, this->pixColor = color.pixel);
+	this->onboardPixel.show();
+}
+
+void FloraBoard::setOnboardLed(boolean on)
+{
+	digitalWrite(ONBOARD_LED_PIN, (ledOn = on) ? HIGH : LOW);
+}
+
+uint32_t FloraBoard::getOnboardPixel(void)
+{
+	return this->pixColor;
+}
+
+boolean FloraBoard::getOnboardLed(void)
+{
+	return this->ledOn;
+}
+
+void pixelColorWipe(NeoPixel& strip, const Color& color)
 {
 	for (uint16_t i = 0; i < strip.numPixels(); i++)
 		strip.setPixelColor(i, color.pixel);
 }
 
-void pixelColorWipe(ColorPattern& pattern, Color& color)
+void pixelColorWipe(ColorPattern& pattern, const Color& color)
 {
 	pixelColorWipe(*pattern.getPixels(), color);
 }
-
-static NeoPixel onboard = { 1, ONBOARD_PIXEL_PIN, NEO_GRB + NEO_KHZ800 };
-void setOnboardPixel(const Color& color)
-{
-	static boolean init = false;
-
-	if (!init)
-	{
-		onboard.begin();
-		init = true;
-	}
-
-	onboard.setPixelColor(0, color.pixel);
-	onboard.show();
-}
-
-void setOnboardLed(boolean on)
-{
-  static boolean init = false;
-  if(!init)
-  {
-    pinMode(ONBOARD_LED_PIN, OUTPUT);
-    init = true;
-  }
-
-  digitalWrite(ONBOARD_LED_PIN, (on ? HIGH : LOW));
-}
-

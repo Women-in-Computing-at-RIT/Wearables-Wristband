@@ -16,10 +16,21 @@
   ----------------------       ----------------------  ----------------------
 */
 
+#include <TimerThree.h>
+#include <SPI.h>
+#if not defined(_VARIANT_ARUDINO_DUE_X_) && not defined(_VARIANT_ARDUINO_ZERO_)
+	#include <SoftwareSerial.h>
+#endif
+
+#include <Adafruit_BluefruitLE_UART.h>
+#include <Adafruit_BluefruitLE_SPI.h>
+#include <Adafruit_BLE.h>
+#include <Adafruit_NeoPixel.h>
+
+#include "BluefruitConfig.h"
+#include "BluefruitComms.h"
 #include "NeoPixelStrip.h"
 #include "PixelShow.h"
-
-//using NeoPixel = Adafruit_NeoPixel;
 
 //  Variables
 const int pulsePin = A10;
@@ -34,28 +45,39 @@ volatile int IBI = 600;             // int that holds the time interval between 
 volatile boolean Pulse = false;     // "True" when User's live heartbeat is detected. "False" when not a "live beat".
 volatile boolean QS = false;        // becomes true when Arduoino finds a beat.
 
-NeoPixel strip = NeoPixel(5, blinkPin, NEO_GRB + NEO_KHZ800);
+NeoPixel strip = NeoPixel(3, blinkPin, NEO_GRB + NEO_KHZ800);
+BluefruitComms comms = BluefruitComms();
+FloraBoard board;
 const Color OFF_COLOR(24, 0, 0);
 const Color ON_COLOR(0, 128, 0);
+
+Color effect[] = {
+	Color(200, 0, 0, 0),
+	Color(0, 200, 0, 0),
+	Color(0, 0, 200, 0)
+}; 
+
+ColorArray effectArr = { effect, 3 };
 
 // Regards Serial OutPut  -- Set This Up to your needs
 static boolean serialVisual = false;   // Set to 'false' by Default.  Re-set to 'true' to see Arduino Serial Monitor ASCII Visual Pulse
 
-RainbowPattern pattern(&strip, 1.0 / 10000.0, nullptr);
-
+RainbowPattern pattern = RainbowPattern(&strip, 100, effectArr);
+ 
 void setup() {
   Serial.begin(115200);             // we agree to talk fast!
   interruptSetup();                 // sets up to read Pulse Sensor signal every 2mS
 
   strip.begin();
-  strip.setPixelColor(2, ON_COLOR.pixel);
-//  strip.setPixelColor(1, 255, 0, 0);
-//  strip.setBrightness(128);
+  strip.setBrightness(48);
   strip.show();
+
+  delay(2000);
+
+  comms.initialize();
 
 }
 
-void colorWipe(NeoPixel, Color);
 //  Where the Magic Happens
 void loop() {
   serialOutput();
@@ -63,32 +85,29 @@ void loop() {
   if (QS == true) {     //  A Heartbeat Was Found
     // BPM and IBI have been Determined
     // Quantified Self "QS" true when arduino finds a heartbeat
-    colorWipe(strip, ON_COLOR);
-    fadeRate = 255;         // Makes the LED Fade Effect Happen
-    // Set 'fadeRate' Variable to 255 to fade LED with pulse
+    //pixelColorWipe(strip, ON_COLOR);
     serialOutputWhenBeatHappens();   // A Beat Happened, Output that to serial.
     QS = false;                      // reset the Quantified Self flag for next time
   }
   else {
-    colorWipe(strip, OFF_COLOR);
+    //pixelColorWipe(strip, OFF_COLOR);
   }
 
-  strip.show();
-  pattern.tick();
+  pattern.apply(strip, effectArr);
 
   if (Pulse)
-	  setOnboardPixel(ON_COLOR);
+	  board.setOnboardPixel(ON_COLOR);
   else
-	  setOnboardPixel(OFF_COLOR);
+	  board.setOnboardPixel(OFF_COLOR);
 
-  delay(10);
-}
-
-void colorWipe(NeoPixel strip, Color color) {
-  for (int i = 0; i < strip.numPixels(); i++) {
-    if(i == 2)
-      continue;
-    strip.setPixelColor(i, color.pixel);
+  static char buf[500];
+  for (uint16_t i = 0; i < strip.numPixels(); i++)
+  {
+	  sprintf(buf, "Attempting to show pixel %d which will be of color %ld.", i, strip.getPixelColor(i));
+	  Serial.println(buf);
   }
-  strip.show();
+
+  static boolean init = false;
+  //pixelColorWipe(strip, ON_COLOR);
+  delay(500);
 }

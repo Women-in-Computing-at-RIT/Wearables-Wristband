@@ -13,17 +13,19 @@
 
 class RainbowPattern : public ColorPattern {
 public:
-	RainbowPattern(uint16_t nPixels, uint8_t pin, double velocity, ColorArray colors, ColorPattern *decorator);
-	RainbowPattern(NeoPixel *pixels, double velocity, ColorArray colors, ColorPattern *decorator);
-	RainbowPattern(NeoPixel *pixels, double velocity, ColorPattern *decorator);
-	ColorArray *setColors(ColorArray& colors);
+	RainbowPattern(uint16_t nPixels, uint8_t pin, TimeMillis period, ColorArray& colors);
+	RainbowPattern(NeoPixel *pixels, TimeMillis period, ColorArray& colors);
+	RainbowPattern(NeoPixel *pixels, TimeMillis period);
+	void setPeriod(TimeMillis period);
+	void setColors(const ColorArray& colors);
+	void getColors(ColorArray& out);
+	void apply(NeoPixel& strip, ColorArray& cols);
+	static ColorArray RAINBOW;
 protected:
-	void act(TimeMillis dt) override;
+	void act() override;
 private:
 	static Color RAINBOW_COLORS[];
-	static ColorArray RAINBOW;
 	ColorArray& colors;
-	double velocity;
 };
 
 #endif

@@ -94,3 +94,4 @@ void arduinoSerialMonitorVisual(char symbol, int data) {
 
 	}
 }
+

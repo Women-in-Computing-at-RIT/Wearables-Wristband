@@ -5,9 +5,10 @@ volatile int P = 512;                      // used to find peak in pulse wave, s
 volatile int T = 512;                     // used to find trough in pulse wave, seeded
 volatile int thresh = 525;                // used to find instant moment of heart beat, seeded
 volatile int amp = 100;                   // used to hold amplitude of pulse waveform, seeded
+
+
 volatile boolean firstBeat = true;        // used to seed rate array so we startup with reasonable BPM
 volatile boolean secondBeat = false;      // used to seed rate array so we startup with reasonable BPM
-
 
 void interruptSetup() {
 	// Initializes Timer2 to throw an interrupt every 2mS.
@@ -97,6 +98,7 @@ ISR(TIMER1_COMPA_vect) {
 
   sei();                                   // enable interrupts when youre done!                             // enable interrupts when youre done!
 }// end isr
+
 
 
 

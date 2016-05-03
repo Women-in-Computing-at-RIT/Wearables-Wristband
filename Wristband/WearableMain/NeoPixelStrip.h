@@ -53,3 +53,4 @@ inline boolean isWhiteColor(const Color& color);
 
 #endif
 
+

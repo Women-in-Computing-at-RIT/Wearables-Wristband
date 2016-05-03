@@ -23,3 +23,4 @@ inline boolean isWhiteColor(const Color& color)
 {
 	return color.pixel == 0xFFFFFFu;
 }
+

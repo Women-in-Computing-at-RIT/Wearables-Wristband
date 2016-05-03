@@ -15,8 +15,6 @@
 #define ONBOARD_LED_PIN 7
 #define ONBOARD_PIXEL_PIN 8
 
-// TODO STOP TRYING TO CONTROL EVERYTHING! Make Patterns functions that can be composed together as opposed to animation engines!
-
 typedef unsigned long int TimeMillis;
 
 /// <summary>
@@ -56,8 +54,13 @@ private:
 };
 
 /// <summary>
-///
+/// A layout of a function that takes an input and returns an input in an immutable fashion. Functions can be composed
+/// (using '+' or f(g)).
 /// </summary>
+/// <remarks>
+/// Although the input is taken as a reference to a ColorArray, a copy is created using the ColorArray Copy Constructor and 
+/// the copy is mutated and returned. This allows functions to have mutable logic but still reduce side effects.
+/// </remarks>
 class ColorFunction {
 public:
 	ColorFunction();
@@ -72,6 +75,9 @@ protected:
 	ColorFunction *inner;
 };
 
+/// <summary>
+/// A composition of two functions, applying the second then the first. (f(x), g(x)) is executed as f(g(x)).
+/// </summary>
 class CombinedColorFunction : public ColorFunction {
 public:
 	CombinedColorFunction(ColorFunction& f, ColorFunction& g);
@@ -81,6 +87,9 @@ public:
 	ColorFunction& g;
 };
 
+/*
+	Takes a pixel strip and wipes all the pixels to a single color.
+*/
 void pixelColorWipe(NeoPixel& strip, Color& color);
 
 #endif

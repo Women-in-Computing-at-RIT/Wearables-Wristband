@@ -39,6 +39,12 @@
     <ClInclude Include="BluefruitConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WearablesUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WearablesUtilityTemplate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoPixelStrip.cpp">
@@ -51,6 +57,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BluefruitComms.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WearablesUtility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

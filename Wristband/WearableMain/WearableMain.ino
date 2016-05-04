@@ -16,9 +16,10 @@
   ----------------------       ----------------------  ----------------------
 */
 
+#include "WearablesUtility.h"
 #include <SPI.h>
 #if not defined(_VARIANT_ARUDINO_DUE_X_) && not defined(_VARIANT_ARDUINO_ZERO_)
-	#include <SoftwareSerial.h>
+#include <SoftwareSerial.h>
 #endif
 
 #include <Adafruit_BluefruitLE_UART.h>
@@ -32,6 +33,11 @@
 #include "PixelShow.h"
 
 #define NUM_PIXEL_STRAP 3
+
+
+// Regards Serial OutPut  -- Set This Up to your needs
+static boolean serialVisual = false;   // Set to 'false' by Default.  Re-set to 'true' to see Arduino Serial Monitor ASCII Visual Pulse
+
 
 //  Variables
 const int pulsePin = A10;
@@ -47,65 +53,70 @@ volatile boolean QS = false;        // becomes true when Arduoino finds a beat.
 NeoPixel strip = NeoPixel(NUM_PIXEL_STRAP, blinkPin, NEO_GRB + NEO_KHZ800);
 BluefruitComms comms;
 FloraBoard board;
+
 const Color OFF_COLOR(24, 0, 0);
 const Color ON_COLOR(0, 128, 0);
 
-Color effect[] = {
-	Color(200, 0, 0, 0),
-	Color(0, 200, 0, 0),
-	Color(0, 0, 200, 0)
-}; 
-
-ColorArray effectArr = { effect, 3 };
-
-// Regards Serial OutPut  -- Set This Up to your needs
-static boolean serialVisual = false;   // Set to 'false' by Default.  Re-set to 'true' to see Arduino Serial Monitor ASCII Visual Pulse
+Color effect[NUM_PIXEL_STRAP] = {
+	Color(64, 0, 0, 0),
+	Color(0, 64, 0, 0),
+	Color(0, 0, 64, 0)
+};
 
 RainbowFunction rainbowFn = RainbowFunction();
 ChaseFunction chaseFn = ChaseFunction();
-PeriodicFunction periodFn = PeriodicFunction(500);
-ColorFunction periodicChaseFn = periodFn(chaseFn);
- 
-ColorArray effectArray = ColorArray(effect, NUM_PIXEL_STRAP);
-ColorArray strapArray = rainbowFn(effectArray);
+PeriodicFunction periodicFn = PeriodicFunction(2000);
+
+ColorArray effectArr = { effect, NUM_PIXEL_STRAP };
+ColorArray strapArray = { effect, NUM_PIXEL_STRAP };
 
 void setup() {
-  Serial.begin(115200);             // we agree to talk fast!
-  interruptSetup();                 // sets up to read Pulse Sensor signal every 2mS
+	while (!Serial);
+	delay(500);
+	Serial.begin(115200);             // we agree to talk fast!
+	interruptSetup();                 // sets up to read Pulse Sensor signal every 2mS
 
-  strip.begin();
-  strip.setBrightness(48);
-  strip.show();
-  
-  delay(50);
-  comms.initialize();
+	strip.begin();
+	strip.setBrightness(12);
+	strip.show();
+
+	board.reset();
+	board.setPixelBrightness(48);
+
+	delay(2000);
+
+	periodicFn.compose(chaseFn);
+	strapArray = rainbowFn.mutate(strapArray);
+	//comms.initialize();
 
 }
 
 //  Where the Magic Happens
 void loop() {
-  serialOutput();
+	serialOutput();
 
-  if (QS == true) {     //  A Heartbeat Was Found
-    // BPM and IBI have been Determined
-    // Quantified Self "QS" true when arduino finds a heartbeat
-    //pixelColorWipe(strip, ON_COLOR);
-    serialOutputWhenBeatHappens();   // A Beat Happened, Output that to serial.
-    QS = false;                      // reset the Quantified Self flag for next time
-  }
-  else {
-    //pixelColorWipe(strip, OFF_COLOR);
-  }
+	if (QS == true) {     //  A Heartbeat Was Found
+	  // BPM and IBI have been Determined
+	  // Quantified Self "QS" true when arduino finds a heartbeat
+		serialOutputWhenBeatHappens();   // A Beat Happened, Output that to serial.
+		QS = false;                      // reset the Quantified Self flag for next time
+	}
 
-  periodicChaseFn._apply(strapArray);
+	periodicFn.apply(strapArray);
 
-  if (Pulse)
-	  board.setOnboardPixel(ON_COLOR);
-  else
-	  board.setOnboardPixel(OFF_COLOR);
+	if (Pulse)
+	{
+		board.setOnboardPixel(ON_COLOR);
+		board.setOnboardLed(true);
+	}
+	else
+	{
+		board.setOnboardPixel(OFF_COLOR);
+		board.setOnboardLed(false);
+	}
 
-  strapArray.apply(strip);
-  strip.show();
+	applyColorArray(strapArray, strip);
+	strip.show(); 
 
-  delay(500);
+	delay(10);
 }

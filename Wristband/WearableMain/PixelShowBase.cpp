@@ -1,58 +1,70 @@
 #include "PixelShowBase.h"
+#include "WearablesUtility.h"
 
-ColorArray::ColorArray(const Color colors[], uint8_t size) : length(size)
+ColorArray createColorArray(Color arr[], uint8_t size)
 {
-	size_t nbytes = size*sizeof(Color);
-
-	this->arr = (Color *)malloc(nbytes);
-	memcpy(this->arr, colors, nbytes);
+	ColorArray carr = { arr, size };
+	return carr;
 }
 
-ColorArray::ColorArray(const ColorArray& orig)
+ColorArray copyColorArray(const ColorArray& original)
 {
-	size_t nbytes = orig.length * sizeof(Color);
-
-	this->length = orig.length;
-	this->arr = (Color *)malloc(nbytes);
+	ColorArray cpy;
+	cpy.arr = new Color[original.size];
+	cpy.size = original.size;
 	
-	memcpy(this->arr, orig.arr, nbytes);
+	WiCUtil::arrayCopy(original.arr, 0, cpy.arr, 0, original.size);
+
+	return cpy;
 }
 
-ColorArray::~ColorArray()
+void createColorArray(ColorArray& colorArray, Color arr[], uint8_t size)
 {
-	free(this->arr);
+	colorArray.arr = arr;
+	colorArray.size = size;
 }
 
-Color& ColorArray::get(uint8_t i) const
+void copyColorArray(const ColorArray& original, ColorArray& cpy)
 {
-	return this->arr[i];
+	WiCUtil::arrayCopy(original.arr, original.size, cpy.arr, cpy.size);
 }
 
-void ColorArray::set(uint8_t i, Color& color)
-{
-	this->arr[i] = color;
-}
-
-uint8_t ColorArray::size(void) const
-{
-	return this->length;
-}
-
-void ColorArray::apply(NeoPixel& strip)
+void applyColorArray(ColorArray& colorArray, NeoPixel& strip)
 {
 	uint16_t nPixels = strip.numPixels();
-	uint8_t nColors = this->length;
+	uint8_t nColors = colorArray.size;
 
-	for (uint8_t i = 0; i < nColors && i < nPixels; i++)
-		strip.setPixelColor(i, this->get(i).pixel);
+	float scale = colorArray.stripOptions.colorScale;
+	for (uint8_t i = 0; i < nColors && i < nPixels; i++) {
+		Color& c = colorArray.arr[i];
+		strip.setPixelColor(i, (uint32_t)(c.pixel * scale));
+	}
+
+	if (colorArray.stripOptions.gammaOverride)
+	{
+		colorArray.stripOptions.gammaOverride = false;
+		strip.setBrightness(colorArray.stripOptions.gamma);
+	}
+	else {
+		colorArray.stripOptions.gamma = strip.getBrightness();
+	}
 }
 
-FloraBoard::FloraBoard() : onboardPixel{ 1, ONBOARD_PIXEL_PIN, NEO_GRB + NEO_KHZ800 }, ledOn(false), pixColor(0)
+FloraBoard::FloraBoard() : onboardPixel{1, ONBOARD_PIXEL_PIN, NEO_GRB + NEO_KHZ800}, ledOn(false), pixColor(0)
 {
 	this->onboardPixel.begin();
-	this->onboardPixel.show();
-
+	 
 	pinMode(ONBOARD_LED_PIN, OUTPUT);
+}
+
+FloraBoard::~FloraBoard()
+{
+	//delete this->onboardPixel;
+}
+
+void FloraBoard::setPixelBrightness(uint8_t brightness)
+{
+	this->onboardPixel.setBrightness(brightness);
 }
 
 void FloraBoard::setOnboardPixel(const Color& color)
@@ -66,6 +78,11 @@ void FloraBoard::setOnboardLed(boolean on)
 	digitalWrite(ONBOARD_LED_PIN, (ledOn = on) ? HIGH : LOW);
 }
 
+uint8_t FloraBoard::getPixelBrightness(void)
+{
+	return this->onboardPixel.getBrightness();
+}
+
 uint32_t FloraBoard::getOnboardPixel(void)
 {
 	return this->pixColor;
@@ -76,58 +93,47 @@ boolean FloraBoard::getOnboardLed(void)
 	return this->ledOn;
 }
 
+void FloraBoard::reset(void)
+{
+	Color col = Color(0);
+	this->setOnboardPixel(col);
+	this->setOnboardLed(false);
+	this->setPixelBrightness(0xFFu);
 
-ColorFunction::ColorFunction() : inner(nullptr)
-{}
+	this->onboardPixel.show();
+}
+
+ColorFunction::ColorFunction(){}
 
 ColorFunction::ColorFunction(ColorFunction *inner) : inner(inner)
 {}
 
-ColorArray ColorFunction::apply(const ColorArray& input)
-{
-	ColorArray cpy = ColorArray(input);
-	this->_apply(cpy);
-
-	return cpy;
-}
-
-ColorArray& ColorFunction::_apply(ColorArray& input)
+ColorArray& ColorFunction::apply(ColorArray& input)
 {
 	if (this->inner != nullptr)
-		this->inner->_apply(input);
+		this->inner->apply(input);
 
 	this->mutate(input);
 	return input;
 }
 
-ColorArray& ColorFunction::mutate(ColorArray& input) const
+ColorArray& ColorFunction::mutate(ColorArray& input)
 {
 	return input;
 }
 
-ColorFunction ColorFunction::operator+(ColorFunction& g)
+void ColorFunction::compose(ColorFunction& inner)
 {
-	return CombinedColorFunction(*this, g);
+	ColorFunction *last = this;
+	while (last->inner != nullptr)
+		last = last->inner;
+
+	last->inner = &inner;
 }
 
-ColorFunction ColorFunction::operator()(ColorFunction& g)
-{
-	return CombinedColorFunction(*this, g);
-}
-
-ColorArray ColorFunction::operator()(ColorArray& input)
+ColorArray& ColorFunction::operator()(ColorArray& input)
 {
 	return this->apply(input);
-}
-
-CombinedColorFunction::CombinedColorFunction(ColorFunction& f, ColorFunction& g) : f(f), g(g)
-{}
-
-ColorArray& CombinedColorFunction::_apply(ColorArray& input)
-{
-	ColorArray& res = this->g._apply(input);
-	res = this->f._apply(res);
-	return res;
 }
 
 void pixelColorWipe(NeoPixel& strip, const Color& color)

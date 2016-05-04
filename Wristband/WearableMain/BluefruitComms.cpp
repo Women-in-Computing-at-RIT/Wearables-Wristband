@@ -32,7 +32,7 @@ boolean BluefruitComms::initialize()
 
 		communicator->echo(false);
 		communicator->info();
-		
+
 		communicator->verbose(false);
 		while (!communicator->isConnected())
 			delay(20);

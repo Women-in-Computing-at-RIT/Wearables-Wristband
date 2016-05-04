@@ -4,9 +4,9 @@
 #define _PIXELSHOW_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
+#include "arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 #include "PixelShowBase.h"
@@ -15,11 +15,11 @@
 class RainbowFunction : public ColorFunction
 {
 public:
-	static const Color RAINBOW_ARR[RAINBOW_ARR_SIZE];
-	static const ColorArray RAINBOW;
+	static Color RAINBOW_ARR[RAINBOW_ARR_SIZE];
+	static ColorArray RAINBOW;
 	RainbowFunction(const ColorArray& colors);
 	RainbowFunction();
-	ColorArray& mutate(ColorArray& input) const override;
+	ColorArray& mutate(ColorArray& input) override;
 private:
 	const ColorArray& colors;
 };
@@ -27,14 +27,14 @@ private:
 class ChaseFunction : public ColorFunction
 {
 public:
-	ColorArray& mutate(ColorArray& input) const override;
+	ColorArray& mutate(ColorArray& input) override;
 };
 
 class DeferFunction : public ColorFunction
 {
 public:
 	DeferFunction(uint16_t deferrals);
-	ColorArray& _apply(ColorArray& input) override;
+	ColorArray& apply(ColorArray& input) override;
 private:
 	uint16_t defers;
 };
@@ -43,10 +43,16 @@ class PeriodicFunction : public ColorFunction
 {
 public:
 	PeriodicFunction(TimeMillis period);
-	ColorArray& _apply(ColorArray& input) override;
+	ColorArray& apply(ColorArray& input) override;
+	TimeMillis getPeriod(void) const;
+	void setPeriod(TimeMillis millis);
+	void delay(TimeMillis millis);
+	void reset(void);
 private:
 	TimeMillis start;
 	TimeMillis period;
 };
-#endif
 
+// PulseFunction by measuring delta time and scaling the brightness linearly (This is pretty similar to periodic)
+
+#endif

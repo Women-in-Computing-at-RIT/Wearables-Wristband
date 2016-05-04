@@ -4,14 +4,14 @@
 #define _BLUEFRUITCOMMS_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
+#include "arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 #include <SPI.h>
 #if not defined(_VARIANT_ARUDINO_DUE_X_) && not defined(_VARIANT_ARDUINO_ZERO_)
-	#include <SoftwareSerial.h>
+#include <SoftwareSerial.h>
 #endif
 
 #include <Adafruit_BluefruitLE_UART.h>

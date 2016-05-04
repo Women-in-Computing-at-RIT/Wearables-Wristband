@@ -4,9 +4,9 @@
 #define _PIXELSHOW_BASE_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "arduino.h"
+#include "arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 #include <stdlib.h>
@@ -21,19 +21,22 @@ typedef unsigned long int TimeMillis;
 /// A wrapper around an array of colors, keeps track of size and can be extended for further
 /// enhancement.
 ///</summary>
-class ColorArray {
-public:
-	ColorArray(const Color arr[], uint8_t size);
-	ColorArray(const ColorArray& orig);
-	~ColorArray();
-	Color& get(uint8_t i) const;
-	void set(uint8_t i, Color& color);
-	uint8_t size(void) const;
-	void apply(NeoPixel& strap);
-private:
+struct ColorArray
+{
 	Color *arr;
-	uint8_t length;
+	uint8_t size;
+	struct {
+		boolean gammaOverride = false;
+		uint8_t gamma = 0;
+		float colorScale = 1.0f;
+	} stripOptions;
 };
+
+ColorArray createColorArray(Color arr[], uint8_t size);
+ColorArray copyColorArray(const ColorArray& original);
+void createColorArray(ColorArray& colorArray, Color arr[], uint8_t size);
+void copyColorArray(const ColorArray& original, ColorArray& cpy);
+void applyColorArray(ColorArray& colorArray, NeoPixel& strip);
 
 /// <summary>
 /// Simple utility class for managing the state of things that are attached to the Flora Board itself like the 
@@ -43,10 +46,14 @@ class FloraBoard
 {
 public:
 	FloraBoard();
+	~FloraBoard();
+	void setPixelBrightness(uint8_t brightness);
 	void setOnboardPixel(const Color& color);
 	void setOnboardLed(boolean on);
+	uint8_t getPixelBrightness(void);
 	uint32_t getOnboardPixel(void);
 	boolean getOnboardLed(void);
+	void reset(void);
 private:
 	uint32_t pixColor;
 	boolean ledOn;
@@ -54,8 +61,7 @@ private:
 };
 
 /// <summary>
-/// A layout of a function that takes an input and returns an input in an immutable fashion. Functions can be composed
-/// (using '+' or f(g)).
+/// A layout of a function that takes an input and returns an input in an immutable fashion. Functions can be composed.
 /// </summary>
 /// <remarks>
 /// Although the input is taken as a reference to a ColorArray, a copy is created using the ColorArray Copy Constructor and 
@@ -64,27 +70,13 @@ private:
 class ColorFunction {
 public:
 	ColorFunction();
-	ColorArray apply(const ColorArray& input);
-	ColorFunction operator+(ColorFunction& f);
-	ColorFunction operator()(ColorFunction& g);
-	ColorArray operator()(ColorArray& input);
-	virtual ColorArray& _apply(ColorArray& input);
-	virtual ColorArray& mutate(ColorArray& input) const;
+	virtual ColorArray& apply(ColorArray& input);
+	ColorArray& operator()(ColorArray& input);
+	void compose(ColorFunction &inner);
+	virtual ColorArray& mutate(ColorArray& input);
 protected:
 	ColorFunction(ColorFunction *inner);
-	ColorFunction *inner;
-};
-
-/// <summary>
-/// A composition of two functions, applying the second then the first. (f(x), g(x)) is executed as f(g(x)).
-/// </summary>
-class CombinedColorFunction : public ColorFunction {
-public:
-	CombinedColorFunction(ColorFunction& f, ColorFunction& g);
-	ColorArray& _apply(ColorArray& input) override;
-	ColorArray& mutate(ColorArray& input) const override;
-	ColorFunction& f;
-	ColorFunction& g;
+	ColorFunction *inner = nullptr;
 };
 
 /*

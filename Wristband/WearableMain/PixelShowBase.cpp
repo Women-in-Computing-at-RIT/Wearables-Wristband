@@ -1,4 +1,5 @@
 #include "PixelShowBase.h"
+#include "WearablesConstants.h"
 #include "WearablesUtility.h"
 
 ColorArray createColorArray(Color arr[], uint8_t size)
@@ -38,7 +39,17 @@ void applyColorArray(ColorArray& colorArray, NeoPixel& strip)
 	for (uint8_t i = 0; i < nColors && i < nPixels; i++) {
 		Color& c = colorArray.arr[i];
 		strip.setPixelColor(i, (uint32_t)(c.pixel * scale));
+#if WiC_DEBUG
+		uint8_t compos[4];
+		dissectColor(c, compos);
+		WiCLog::debug("Setting Pixel %u - R: %03u, G: %03u, B: %03u, W: %03u -- Hex: 0x%02X%02X%02X%02X, Val: %14lu", i, compos[0], compos[1], compos[2], compos[3], compos[0], compos[1], compos[2], compos[3], c.pixel);
+#endif
 	}
+
+#if WiC_DEBUG
+	WiCLog::debug("Setting Strip Gamma to %u - Override?: %s - Strip Gamma Was %u", colorArray.stripOptions.gamma, colorArray.stripOptions.gammaOverride ? "YES" : "NO", strip.getBrightness());
+	WiCLog::debug("Pixel Scalar: %f", scale);
+#endif
 
 	if (colorArray.stripOptions.gammaOverride)
 	{
@@ -95,7 +106,7 @@ boolean FloraBoard::getOnboardLed(void)
 
 void FloraBoard::reset(void)
 {
-	Color col = Color(0);
+	Color col = createColor();
 	this->setOnboardPixel(col);
 	this->setOnboardLed(false);
 	this->setPixelBrightness(0xFFu);

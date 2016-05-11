@@ -9,9 +9,31 @@
 	#include "WProgram.h"
 #endif
 
+#include "WearablesConstants.h"
+
+#define LOG_FMT_MAX_SIZE 256
+#define LOG_OUT(logstr) Serial.println(logstr);
+
+#ifdef WiC_DEBUG
+#define WiC_MUTE_LOG false
+#else
+#define WiC_MUTE_LOG false
+#endif
+
 namespace WiCMath {
 	size_t gcd(size_t a, size_t b);
-	int32_t gcd(int32_t a, int32_t b);
+	int32_t gcd(int32_t a, int32_t b); 
+}
+
+namespace WiCLog {
+	enum LogLevel { LOG_VERBOSE = 0, LOG_DEBUG = 1, LOG_INFO = 2, LOG_WARN = 3, LOG_ERROR = 4};
+
+	void log(LogLevel level, const char *fmt, ...);
+	void debug(const char *fmt, ...);
+	void info(const char *fmt, ...);
+	void warn(const char *fmt, ...);
+	void error(const char *fmt, ...);
+
 }
 
 namespace WiCUtil {

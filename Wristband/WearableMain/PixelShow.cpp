@@ -3,15 +3,16 @@
 // 
 #include <math.h>
 #include "PixelShow.h"
+#include "WearablesConstants.h"
 #include "WearablesUtility.h"
 
 #define RAINBOW_COLOR_COUNT 4
 
 Color RainbowFunction::RAINBOW_ARR[RAINBOW_ARR_SIZE] = {
-	Color(48, 0, 0, 0),
-	Color(0, 48, 0, 0),
-	Color(0, 0, 48, 0),
-	Color(0, 0, 0, 48)
+	createColor(48, 0, 0, 0),
+	createColor(0, 48, 0, 0),
+	createColor(0, 0, 48, 0),
+	createColor(0, 0, 0, 48)
 };
 
 ColorArray RainbowFunction::RAINBOW = { RainbowFunction::RAINBOW_ARR, RAINBOW_ARR_SIZE };

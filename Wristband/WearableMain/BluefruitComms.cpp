@@ -2,12 +2,12 @@
 // 
 // 
 
+#include "WearablesConstants.h"
 #include "BluefruitComms.h"
 
 // A small helper
 void error(const char*err) {
 	Serial.println(err);
-	while (1);
 }
 
 BluefruitComms::BluefruitComms()
@@ -24,7 +24,7 @@ boolean BluefruitComms::initialize()
 {
 	if (!communicator->begin(VERBOSE_MODE)) {
 		error("Couldn't find Bluefruit. Ensure it is in CMD mode nad wiring is correct!");
-		return this->connected = false;
+		return false;
 	}
 	else
 	{
@@ -34,13 +34,13 @@ boolean BluefruitComms::initialize()
 		communicator->info();
 
 		communicator->verbose(false);
-		while (!communicator->isConnected())
-			delay(20);
 
-		Serial.println("Bluefruit is Connected!");
-
-		return this->connected = true;
+		return true;
 	}
+}
+
+boolean BluefruitComms::isConnected() {
+	return communicator->isConnected();
 }
 
 Bluefruit *BluefruitComms::getBluefruit()

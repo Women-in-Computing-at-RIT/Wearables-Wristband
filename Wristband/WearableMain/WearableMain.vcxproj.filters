@@ -19,6 +19,8 @@
     <None Include="TimerInterruptNotes.ino" />
     <None Include="WearableMain.ino" />
     <None Include="Interrupt.ino" />
+    <None Include="BluetoothHandling.ino" />
+    <None Include="LuxSensor.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.WearableMain.vsarduino.h">
@@ -43,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WearablesUtilityTemplate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WearablesConstants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -16,7 +16,7 @@
 typedef Adafruit_NeoPixel NeoPixel;
 
 /// Represents an RGB Color, 
-typedef union Color {
+union Color {
 	uint32_t pixel;
 	struct {
 		uint8_t red;
@@ -24,32 +24,15 @@ typedef union Color {
 		uint8_t blue;
 		uint8_t white;
 	} components;
+};
 
-	Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t white = 0) {
-		this->pixel = NeoPixel::Color(red, green, blue, white);
-	}
+Color createColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t white);
+Color createColor(uint8_t red, uint8_t green, uint8_t blue);
+Color createColor(uint32_t hex);
+Color createWhite(uint8_t intensity);
+Color createColor();
 
-	Color(uint32_t hexcode) {
-		uint8_t red, green, blue, white = 0;
-		if (hexcode <= 0xFFFFFF) {
-			red = (hexcode >> 16) & 0xFF;
-			green = (hexcode >> 8) & 0xFF;
-			blue = hexcode & 0xFF;
-		}
-		else {
-			red = (hexcode >> 24) & 0xFF;
-			green = (hexcode >> 16) & 0xFF;
-			blue = (hexcode >> 8) & 0xFF;
-			white = hexcode & 0xFF;
-		}
-
-		this->pixel = NeoPixel::Color(red, green, blue, white);
-	}
-
-	Color() {
-		pixel = NeoPixel::Color(0, 0, 0, 0);
-	}
-} Color;
+void dissectColor(Color& c, uint8_t comps[4]);
 
 inline boolean isBlackColor(const uint32_t& pixel);
 inline boolean isWhiteColor(const uint32_t& pixel);

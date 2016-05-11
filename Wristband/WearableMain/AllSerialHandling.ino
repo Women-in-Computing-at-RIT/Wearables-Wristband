@@ -5,6 +5,9 @@
 /////////
 
 void serialOutput() {   // Decide How To Output Serial. 
+	if (!Serial)
+		return;
+
 	if (serialVisual == true) {
 		arduinoSerialMonitorVisual('-', Signal);   // goes to function that makes Serial Monitor Visualizer
 	}
@@ -16,6 +19,9 @@ void serialOutput() {   // Decide How To Output Serial.
 
 //  Decides How To OutPut BPM and IBI Data
 void serialOutputWhenBeatHappens() {
+	if (!Serial)
+		return;
+
 	if (serialVisual == true) {            //  Code to Make the Serial Monitor Visualizer Work
 		Serial.print("*** Heart-Beat Happened *** ");  //ASCII Art Madness
 		Serial.print("BPM: ");

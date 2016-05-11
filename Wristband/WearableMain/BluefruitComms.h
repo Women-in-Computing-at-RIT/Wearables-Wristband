@@ -29,11 +29,11 @@ public:
 	BluefruitComms();
 	~BluefruitComms();
 	boolean initialize();
+	boolean isConnected();
 	Bluefruit *getBluefruit();
 private:
 	void factoryReset(void);
 	Bluefruit *communicator;
-	boolean connected;
 };
 
 #endif
